@@ -21,33 +21,37 @@ def create_table():
     conn.close()
 
 
-def insert_eser(eserAdi, eserBasim, eserSayfa):
+def insert_eser(eserAdi, eserBasim, eserSayfa, eserID):
     conn = sqlite3.connect("verıtabanı.cıve.db")
     cursor = conn.cursor()
 
     # Yeni bir eser ekle
     cursor.execute('''
-        INSERT INTO Eser (eserAdi, eserBasim, eserSayfa)
+        INSERT INTO Eser (eserAdi, eserBasim, eserSayfa, eserID)
         VALUES (?, ?, ?)
-    ''', (eserAdi, eserBasim, eserSayfa))
-
-    conn.commit()
-    conn.close()
-
-
-def update_eser(eserID, eserAdi, eserBasim, eserSayfa):
-    conn = sqlite3.connect('verıtabanı.cıve.db')
-    cursor = conn.cursor()
-
-    # Eser bilgilerini güncelle
-    cursor.execute('''
-        UPDATE Eser SET eserAdi=?, eserBasim=?, eserSayfa=?
-        WHERE eserID=?
     ''', (eserAdi, eserBasim, eserSayfa, eserID))
 
     conn.commit()
     conn.close()
 
+
+def update_eser(eserAdi, eserBasim, eserSayfa, eserID):
+    conn = sqlite3.connect('verıtabanı.cıve.db')
+    cursor = conn.cursor()
+
+    try:
+        # Eser bilgilerini güncelle
+        cursor.execute('''
+            UPDATE Eser SET eserAdi=?, eserBasim=?, eserSayfa=?
+            WHERE eserID=?
+        ''', (eserAdi, eserBasim, eserSayfa, eserID))
+
+        conn.commit()
+        print("Eser güncelleme başarılı!")
+    except Exception as e:
+        print(f"Eser güncelleme hatası: {e}")
+    finally:
+        conn.close()
 
 def delete_eser(eserID):
     conn = sqlite3.connect("verıtabanı.cıve.db")
@@ -78,13 +82,13 @@ class EserApp:
     def __init__(self, master):
         self.master = master
         self.master.title('Katalog: Eserleri Yönet')
-        self.master.geometry('800x300')
+        self.master.geometry('650x750')
         self.master.resizable = True
         self.master['bg'] = '#cff8B8B83'
 
         create_table()
 
-        self.eserTabloCercevesi = ttk.Frame(self.master, padding=25)
+        self.eserTabloCercevesi = ttk.Frame(self.master, padding=10)
         self.eserTabloCercevesi.pack()
 
         self.eserTablosu = ttk.Treeview(self.eserTabloCercevesi)
@@ -93,10 +97,10 @@ class EserApp:
         self.eserTablosu['columns'] = ('eserID', 'eserAdi', 'eserBasim', 'eserSayfa')
 
         self.eserTablosu.column("#0", width=0, stretch=NO)
-        self.eserTablosu.column("eserID", anchor=CENTER, width=50)
-        self.eserTablosu.column("eserAdi", anchor=CENTER, width=250)
+        self.eserTablosu.column("eserID", anchor=CENTER, width=150)
+        self.eserTablosu.column("eserAdi", anchor=CENTER, width=150)
         self.eserTablosu.column("eserBasim", anchor=CENTER, width=75)
-        self.eserTablosu.column("eserSayfa", anchor=CENTER, width=250)
+        self.eserTablosu.column("eserSayfa", anchor=CENTER, width=150)
 
         self.eserTablosu.heading("#0", text="", anchor=CENTER)
         self.eserTablosu.heading("eserID", text="Eser ID", anchor=CENTER)
@@ -117,7 +121,7 @@ class EserApp:
         self.entry_basim = Entry(self.master)
         self.entry_basim.pack()
 
-        self.label_url = Label(self.master, text="Eser URL:")
+        self.label_url = Label(self.master, text="Eser ID:")
         self.label_url.pack()
         self.entry_url = Entry(self.master)
         self.entry_url.pack()
@@ -141,10 +145,15 @@ class EserApp:
         self.entry_basim_guncelle = Entry(self.master)
         self.entry_basim_guncelle.pack()
 
-        self.label_url_guncelle = Label(self.master, text="Yeni Eser URL:")
-        self.label_url_guncelle.pack()
-        self.entry_url_guncelle = Entry(self.master)
-        self.entry_url_guncelle.pack()
+        self.label_ıd_guncelle = Label(self.master, text="Yeni Eser ID:")
+        self.label_ıd_guncelle.pack()
+        self.entry_ıd_guncelle = Entry(self.master)
+        self.entry_ıd_guncelle.pack()
+
+        self.label_sayfa_guncelle = Label(self.master, text="Yeni Eser Sayfa:")
+        self.label_sayfa_guncelle.pack()
+        self.entry_sayfa_guncelle = Entry(self.master)
+        self.entry_sayfa_guncelle.pack()
 
         self.button_guncelle = Button(self.master, text="Eser Güncelle", command=self.guncelle)
         self.button_guncelle.pack()
@@ -164,28 +173,28 @@ class EserApp:
     def ekle(self):
         eserAdi = self.entry_adi.get()
         eserBasim = self.entry_basim.get()
-        eserURL = self.entry_url.get()
+        eserID = self.entry_ıd.get()
 
-        insert_eser(eserAdi, eserBasim, eserURL)
+        insert_eser(eserAdi, eserBasim, eserID)
         self.populate_table()
 
         self.entry_adi.delete(0, END)
         self.entry_basim.delete(0, END)
-        self.entry_url.delete(0, END)
+        self.entry_ıd.delete(0, END)
 
     def guncelle(self):
-        eserID = self.entry_eserID_guncelle.get()
         eserAdi = self.entry_adi_guncelle.get()
         eserBasim = self.entry_basim_guncelle.get()
-        eserURL = self.entry_url_guncelle.get()
+        eserSayfa = self.entry_sayfa_guncelle.get()
+        eserID = self.entry_eserID_guncelle.get()
 
-        update_eser(eserID, eserAdi, eserBasim, eserURL)
+        update_eser(eserID, eserAdi, eserBasim, eserSayfa)
         self.populate_table()
 
-        self.entry_eserID_guncelle.delete(0, END)
         self.entry_adi_guncelle.delete(0, END)
         self.entry_basim_guncelle.delete(0, END)
-        self.entry_url_guncelle.delete(0, END)
+        self.entry_sayfa_guncelle.delete(0, END)
+        self.entry_eserID_guncelle.delete(0, END)
 
     def sil(self):
         eserID = self.entry_eserID_sil.get()
